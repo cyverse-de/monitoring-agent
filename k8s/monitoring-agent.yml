@@ -52,6 +52,15 @@ spec:
       containers:
       - name: monitoring-agent
         image: harbor.cyverse.org/de/monitoring-agent
+        env:
+        - name: DISCOENV_NAMESPACE
+          valueFrom:
+            fieldRef:
+                fieldPath: metadata.namespace
+        - name: DISCOENV_NODE
+          valueFrom:
+            fieldRef:
+                fieldPath: spec.nodeName
         resources:
           requests:
             cpu: "1m"
