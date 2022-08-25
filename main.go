@@ -63,28 +63,28 @@ func main() {
 		log.Fatalf("The %sNATS_CLUSTER environment variable or nats.cluster configuration value must be set", *envPrefix)
 	}
 
-	tlsCert := c.String("nats.tlscert")
+	tlsCert := c.String("nats.tls.cert")
 	if tlsCert == "" {
-		log.Fatalf("The %sNATS_TLSCERT environment variable or nats.tlscert configuration value must be set", *envPrefix)
+		log.Fatalf("The %sNATS_TLS_CERT environment variable or nats.tlscert configuration value must be set", *envPrefix)
 	}
 
-	tlsKey := c.String("nats.tlskey")
+	tlsKey := c.String("nats.tls.key")
 	if tlsKey == "" {
-		log.Fatalf("The %sNATS_TLSKEY environment variable or nats.tlskey configuration value must be set", *envPrefix)
+		log.Fatalf("The %sNATS_TLS_KEY environment variable or nats.tlskey configuration value must be set", *envPrefix)
 	}
 
-	caCert := c.String("nats.cacert")
+	caCert := c.String("nats.tls.ca.cert")
 	if caCert == "" {
-		log.Fatalf("The %sNATS_CACERT environment variable or nats.cacert configuration value must be set", *envPrefix)
+		log.Fatalf("The %sNATS_TLS_CA_CERT environment variable or nats.cacert configuration value must be set", *envPrefix)
 	}
 
-	credsPath := c.String("nats.creds")
+	credsPath := c.String("nats.creds.path")
 	if credsPath == "" {
-		log.Fatalf("The %sNATS_CREDS environment variable or nats.creds configuration value must be set", *envPrefix)
+		log.Fatalf("The %sNATS_CREDS_PATH environment variable or nats.creds configuration value must be set", *envPrefix)
 	}
 
-	maxReconnects := c.Int("nats.maxreconnects")
-	reconnectWait := c.Int("nats.reconnectWait")
+	maxReconnects := c.Int("nats.reconnects.max")
+	reconnectWait := c.Int("nats.reconnects.wait")
 
 	natsSubject := c.String("nats.basesubject")
 	if natsSubject == "" {

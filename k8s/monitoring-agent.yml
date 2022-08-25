@@ -53,14 +53,7 @@ spec:
       - name: monitoring-agent
         image: harbor.cyverse.org/de/monitoring-agent
         env:
-        - name: DISCOENV_NAMESPACE
-          valueFrom:
-            fieldRef:
-                fieldPath: metadata.namespace
-        - name: DISCOENV_NODE
-          valueFrom:
-            fieldRef:
-                fieldPath: spec.nodeName
+
         resources:
           requests:
             cpu: "1m"
@@ -72,6 +65,48 @@ spec:
           - --log-level
           - debug
         env:
+          - name: DISCOENV_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: DISCOENV_NODE
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: DISCOENV_NATS_TLS_CERT
+            valueFrom:
+              secretKeyRef:
+                name: configs
+                key: NATS_TLS_CERT
+          - name: DISCOENV_NATS_TLS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: configs
+                key: NATS_TLS_KEY
+          - name: DISCOENV_NATS_TLS_CA_CERT
+            valueFrom:
+              secretKeyRef:
+                name: configs
+                key: NATS_TLS_CA_CERT
+          - name: DISCOENV_NATS_CREDS_PATH:
+            valueFrom:
+              secretKeyRef:
+                name: configs
+                key: NATS_CREDS_PATH
+          - name: DISCOENV_NATS_RECONNECTS_MAX
+            valueFrom:
+              secretKeyRef:
+                name: configs
+                key: NATS_RECONNECTS_MAX
+          - name: DISCOENV_NATS_RECONNECTS_WAIT
+            valueFrom:
+              secretKeyRef:
+                name: configs
+                key: NATS_RECONNECTS_WAIT
+          - name: DISCOENV_NATS_BASESUBJECT
+            value: cyverse.monitoring.agent
+          - name: DISCOENV_NATS_BASEQUEUE
+            value: cyverse.monitoring.agent
           - name: OTEL_TRACES_EXPORTER
             valueFrom:
               secretKeyRef:
