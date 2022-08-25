@@ -1,0 +1,4 @@
+monitoring-agent
+**/jobservices.yml
+configs/local.yml
+configs/local.yaml
