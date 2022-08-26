@@ -99,6 +99,7 @@ type DNSCheckConfiguration struct {
 	Interval          *time.Duration
 	InternalHostnames []string
 	ExternalHostnames []string
+	Node              string
 }
 
 func initDNSChecks(c *koanf.Koanf) (*DNSCheckConfiguration, error) {
@@ -168,10 +169,16 @@ func main() {
 	}
 	log.Infof("Done reading config from %s", *configPath)
 
+	nodeName := c.String("node")
+	if nodeName == "" {
+		log.Fatal("The %sNODE environment variable or node configuration value must be set", *envPrefix)
+	}
+
 	dnsCfg, err := initDNSChecks(c)
 	if err != nil {
 		log.Fatal(err)
 	}
+	dnsCfg.Node = nodeName
 
 	natsConn, err := initNATS(c, envPrefix)
 	if err != nil {
@@ -198,6 +205,8 @@ func main() {
 		for {
 			result := pbinit.NewDNSCheckResult()
 
+			result.Node = dnsCfg.Node
+
 			for _, h := range dnsCfg.ExternalHostnames {
 				addrs, err := net.LookupHost(h)
 				result.Lookups = append(result.Lookups, &monitoring.DNSLookup{
@@ -217,6 +226,8 @@ func main() {
 					Error:     err.Error(),
 				})
 			}
+
+			result.DateSent = time.Now().String()
 
 			// Add logic for sending check results here.
 			if err := gotelnats.Publish(
