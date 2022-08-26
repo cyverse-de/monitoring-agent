@@ -5,7 +5,10 @@ import (
 	_ "expvar"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
+	"strings"
+	"time"
 
 	_ "expvar"
 
@@ -24,40 +27,7 @@ const serviceName = "monitoring-agent"
 
 var log = logging.Log.WithFields(logrus.Fields{"service": serviceName})
 
-func main() {
-	var (
-		err error
-		c   *koanf.Koanf
-
-		configPath = flag.String("config", cfg.DefaultConfigPath, "The path to the config file")
-		dotEnvPath = flag.String("dotenv-path", cfg.DefaultDotEnvPath, "The path to the env file to load")
-		logLevel   = flag.String("log-level", "info", "One of trace, debug, info, warn, error, fatal, or panic.")
-		envPrefix  = flag.String("env-prefix", cfg.DefaultEnvPrefix, "The prefix to look for when setting configuration setting in environment variables")
-		varsPort   = flag.Int("vars-port", 60000, "The port to listen on for requests to /debug/vars")
-	)
-	flag.Parse()
-
-	logging.SetupLogging(*logLevel)
-
-	tracerCtx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	shutdown := otelutils.TracerProviderFromEnv(tracerCtx, serviceName, func(e error) { log.Fatal(e) })
-	defer shutdown()
-
-	nats.RegisterEncoder("protojson", protobufjson.NewCodec(protobufjson.WithEmitUnpopulated()))
-
-	c, err = cfg.Init(&cfg.Settings{
-		EnvPrefix:   *envPrefix,
-		ConfigPath:  *configPath,
-		DotEnvPath:  *dotEnvPath,
-		StrictMerge: false,
-		FileType:    cfg.YAML,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Infof("Done reading config from %s", *configPath)
-
+func initNATS(c *koanf.Koanf, envPrefix *string) (*natsconn.Connector, error) {
 	natsCluster := c.String("nats.cluster")
 	if natsCluster == "" {
 		log.Fatalf("The %sNATS_CLUSTER environment variable or nats.cluster configuration value must be set", *envPrefix)
@@ -119,6 +89,72 @@ func main() {
 		log.Fatal(err)
 	}
 
+	return natsConn, err
+}
+
+func initDNSChecks(c *koanf.Koanf) ([]string, time.Duration, error) {
+	dnsChecksSetting := c.String("dns.hostnames")
+	dnsCheckHostnames := make([]string, 0)
+	if dnsChecksSetting != "" {
+		dnsChecksParts := strings.Split(dnsChecksSetting, ",")
+		for _, p := range dnsChecksParts {
+			dnsCheckHostnames = append(dnsCheckHostnames, strings.TrimSpace(p))
+		}
+	}
+
+	checkIntervalSetting := c.String("dns.checkinterval")
+	if checkIntervalSetting == "" {
+		checkIntervalSetting = "1m"
+	}
+	intervalD, err := time.ParseDuration(checkIntervalSetting)
+
+	return dnsCheckHostnames, intervalD, err
+}
+
+func main() {
+	var (
+		err error
+		c   *koanf.Koanf
+
+		configPath = flag.String("config", cfg.DefaultConfigPath, "The path to the config file")
+		dotEnvPath = flag.String("dotenv-path", cfg.DefaultDotEnvPath, "The path to the env file to load")
+		logLevel   = flag.String("log-level", "info", "One of trace, debug, info, warn, error, fatal, or panic.")
+		envPrefix  = flag.String("env-prefix", cfg.DefaultEnvPrefix, "The prefix to look for when setting configuration setting in environment variables")
+		varsPort   = flag.Int("vars-port", 60000, "The port to listen on for requests to /debug/vars")
+	)
+	flag.Parse()
+
+	logging.SetupLogging(*logLevel)
+
+	tracerCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	shutdown := otelutils.TracerProviderFromEnv(tracerCtx, serviceName, func(e error) { log.Fatal(e) })
+	defer shutdown()
+
+	nats.RegisterEncoder("protojson", protobufjson.NewCodec(protobufjson.WithEmitUnpopulated()))
+
+	c, err = cfg.Init(&cfg.Settings{
+		EnvPrefix:   *envPrefix,
+		ConfigPath:  *configPath,
+		DotEnvPath:  *dotEnvPath,
+		StrictMerge: false,
+		FileType:    cfg.YAML,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Infof("Done reading config from %s", *configPath)
+
+	dnsHosts, dnsInterval, err := initDNSChecks(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	natsConn, err := initNATS(c, envPrefix)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	pingSubject, pingQueue, err := natsConn.Subscribe("ping", func(m *nats.Msg) {
 		log.Info("ping message received")
 		err := m.Respond([]byte("pong"))
@@ -130,6 +166,29 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Infof("subscribed to %s on queue %s via NATS", pingSubject, pingQueue)
+
+	// The periodic DNS health checks. We aren't using a Ticker because we only want
+	// a single check to run at a time and have the interval control the time between
+	// iterations.
+	go func(dnsHosts []string, interval time.Duration) {
+		log = log.WithFields(logrus.Fields{"context": "dns check"})
+		for {
+			for _, h := range dnsHosts {
+				addrs, err := net.LookupHost(h)
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				for _, addr := range addrs {
+					log.Infof("host: %s, addr: %s", h, addr)
+				}
+			}
+
+			// Add logic for sending check results here.
+
+			time.Sleep(dnsInterval)
+		}
+	}(dnsHosts, dnsInterval)
 
 	portStr := fmt.Sprintf(":%d", *varsPort)
 	if err = http.ListenAndServe(portStr, nil); err != nil {
