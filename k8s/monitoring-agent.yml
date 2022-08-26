@@ -69,49 +69,72 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
+
           - name: DISCOENV_NODE
             valueFrom:
               fieldRef:
                 fieldPath: spec.nodeName
+
+          - name: DISCOENV_DNS_INTERNAL_HOSTNAMES
+            value: kubernetes.default.svc
+
+          - name: DISCOENV_DNS_EXTERNAL_HOSTNAMES
+            value: "cyverse.org,google.com"
+
+          - name: DISCOENV_DNS_CHECKINTERVAL
+            value: "2m"
+
+          - name: DISCOENV_HEARTBEAT_INTERVAL
+            value: "10s"
+
           - name: DISCOENV_NATS_TLS_CERT
             valueFrom:
               secretKeyRef:
                 name: configs
                 key: NATS_TLS_CERT
+
           - name: DISCOENV_NATS_TLS_KEY
             valueFrom:
               secretKeyRef:
                 name: configs
                 key: NATS_TLS_KEY
+
           - name: DISCOENV_NATS_TLS_CA_CERT
             valueFrom:
               secretKeyRef:
                 name: configs
                 key: NATS_TLS_CA_CERT
+
           - name: DISCOENV_NATS_CREDS_PATH:
             valueFrom:
               secretKeyRef:
                 name: configs
                 key: NATS_CREDS_PATH
+
           - name: DISCOENV_NATS_RECONNECTS_MAX
             valueFrom:
               secretKeyRef:
                 name: configs
                 key: NATS_RECONNECTS_MAX
+
           - name: DISCOENV_NATS_RECONNECTS_WAIT
             valueFrom:
               secretKeyRef:
                 name: configs
                 key: NATS_RECONNECTS_WAIT
+
           - name: DISCOENV_NATS_BASESUBJECT
             value: cyverse.monitoring.agent
+
           - name: DISCOENV_NATS_BASEQUEUE
             value: cyverse.monitoring.agent
+
           - name: OTEL_TRACES_EXPORTER
             valueFrom:
               secretKeyRef:
                 name: configs
                 key: OTEL_TRACES_EXPORTER
+                
           - name: OTEL_EXPORTER_JAEGER_ENDPOINT
             valueFrom:
               secretKeyRef:
