@@ -126,13 +126,36 @@ func initDNSChecks(c *koanf.Koanf) (*DNSCheckConfiguration, error) {
 		checkIntervalSetting = "1m"
 	}
 	intervalD, err := time.ParseDuration(checkIntervalSetting)
+	if err != nil {
+		return nil, err
+	}
 
 	cfg := &DNSCheckConfiguration{
 		Interval:          &intervalD,
 		InternalHostnames: dnsInternalHostnames,
 		ExternalHostnames: dnsExternalHostnames,
 	}
-	return cfg, err
+	return cfg, nil
+}
+
+type HeartbeatConfiguration struct {
+	Interval *time.Duration
+	Node     string
+}
+
+func initHeartbeat(c *koanf.Koanf) (*HeartbeatConfiguration, error) {
+	heartbeatIntervalSetting := c.String("heartbeat.interval")
+	if heartbeatIntervalSetting == "" {
+		heartbeatIntervalSetting = "10s"
+	}
+	intervalD, err := time.ParseDuration(heartbeatIntervalSetting)
+	if err != nil {
+		return nil, err
+	}
+	cfg := &HeartbeatConfiguration{
+		Interval: &intervalD,
+	}
+	return cfg, nil
 }
 
 func main() {
@@ -179,6 +202,12 @@ func main() {
 		log.Fatal(err)
 	}
 	dnsCfg.Node = nodeName
+
+	heartbeatCfg, err := initHeartbeat(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	heartbeatCfg.Node = nodeName
 
 	natsConn, err := initNATS(c, envPrefix)
 	if err != nil {
@@ -242,6 +271,24 @@ func main() {
 			time.Sleep(*dnsCfg.Interval)
 		}
 	}(natsConn, dnsCfg)
+
+	go func(natsConn *natsconn.Connector, hbCfg *HeartbeatConfiguration) {
+		for {
+			hb := pbinit.NewMonitoringHeartbeat()
+			hb.Node = hbCfg.Node
+			hb.DateSent = time.Now().String()
+			if err := gotelnats.Publish(
+				context.Background(),
+				natsConn.Conn,
+				"cyverse.discoenv.monitoring.heartbeat",
+				hb,
+			); err != nil {
+				log.Error(err)
+			}
+
+			time.Sleep(*hbCfg.Interval)
+		}
+	}(natsConn, heartbeatCfg)
 
 	portStr := fmt.Sprintf(":%d", *varsPort)
 	if err = http.ListenAndServe(portStr, nil); err != nil {
