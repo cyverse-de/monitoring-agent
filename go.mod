@@ -4,8 +4,10 @@ go 1.18
 
 require (
 	github.com/cyverse-de/go-mod/cfg v0.0.1
+	github.com/cyverse-de/go-mod/gotelnats v0.0.11
 	github.com/cyverse-de/go-mod/logging v0.0.2
 	github.com/cyverse-de/go-mod/otelutils v0.0.3
+	github.com/cyverse-de/go-mod/pbinit v0.0.5
 	github.com/cyverse-de/go-mod/protobufjson v0.0.3
 	github.com/knadh/koanf v1.4.1
 	github.com/lib/pq v1.10.6
@@ -14,6 +16,10 @@ require (
 )
 
 require (
+	github.com/cyverse-de/p/go/header v0.0.1 // indirect
+	github.com/cyverse-de/p/go/monitoring v0.0.2 // indirect
+	github.com/cyverse-de/p/go/qms v0.0.6 // indirect
+	github.com/cyverse-de/p/go/svcerror v0.0.5 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -33,6 +39,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.9.0 // indirect
 	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd // indirect
 	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )

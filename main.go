@@ -13,10 +13,13 @@ import (
 	_ "expvar"
 
 	"github.com/cyverse-de/go-mod/cfg"
+	"github.com/cyverse-de/go-mod/gotelnats"
 	"github.com/cyverse-de/go-mod/logging"
 	"github.com/cyverse-de/go-mod/otelutils"
+	"github.com/cyverse-de/go-mod/pbinit"
 	"github.com/cyverse-de/go-mod/protobufjson"
 	"github.com/cyverse-de/monitoring-agent/natsconn"
+	"github.com/cyverse-de/p/go/monitoring"
 	"github.com/knadh/koanf"
 	_ "github.com/lib/pq"
 	"github.com/nats-io/nats.go"
@@ -92,13 +95,28 @@ func initNATS(c *koanf.Koanf, envPrefix *string) (*natsconn.Connector, error) {
 	return natsConn, err
 }
 
-func initDNSChecks(c *koanf.Koanf) ([]string, time.Duration, error) {
-	dnsChecksSetting := c.String("dns.hostnames")
-	dnsCheckHostnames := make([]string, 0)
-	if dnsChecksSetting != "" {
-		dnsChecksParts := strings.Split(dnsChecksSetting, ",")
-		for _, p := range dnsChecksParts {
-			dnsCheckHostnames = append(dnsCheckHostnames, strings.TrimSpace(p))
+type DNSCheckConfiguration struct {
+	Interval          *time.Duration
+	InternalHostnames []string
+	ExternalHostnames []string
+}
+
+func initDNSChecks(c *koanf.Koanf) (*DNSCheckConfiguration, error) {
+	dnsInternalSetting := c.String("dns.internal.hostnames")
+	dnsInternalHostnames := make([]string, 0)
+	if dnsInternalSetting != "" {
+		internalParts := strings.Split(dnsInternalSetting, ",")
+		for _, p := range internalParts {
+			dnsInternalHostnames = append(dnsInternalHostnames, strings.TrimSpace(p))
+		}
+	}
+
+	dnsExternalSetting := c.String("dns.external.hostnames")
+	dnsExternalHostnames := make([]string, 0)
+	if dnsExternalSetting != "" {
+		externalParts := strings.Split(dnsExternalSetting, ",")
+		for _, p := range externalParts {
+			dnsExternalHostnames = append(dnsExternalHostnames, strings.TrimSpace(p))
 		}
 	}
 
@@ -108,7 +126,12 @@ func initDNSChecks(c *koanf.Koanf) ([]string, time.Duration, error) {
 	}
 	intervalD, err := time.ParseDuration(checkIntervalSetting)
 
-	return dnsCheckHostnames, intervalD, err
+	cfg := &DNSCheckConfiguration{
+		Interval:          &intervalD,
+		InternalHostnames: dnsInternalHostnames,
+		ExternalHostnames: dnsExternalHostnames,
+	}
+	return cfg, err
 }
 
 func main() {
@@ -145,7 +168,7 @@ func main() {
 	}
 	log.Infof("Done reading config from %s", *configPath)
 
-	dnsHosts, dnsInterval, err := initDNSChecks(c)
+	dnsCfg, err := initDNSChecks(c)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -170,25 +193,44 @@ func main() {
 	// The periodic DNS health checks. We aren't using a Ticker because we only want
 	// a single check to run at a time and have the interval control the time between
 	// iterations.
-	go func(dnsHosts []string, interval time.Duration) {
+	go func(natsConn *natsconn.Connector, dnsCfg *DNSCheckConfiguration) {
 		log = log.WithFields(logrus.Fields{"context": "dns check"})
 		for {
-			for _, h := range dnsHosts {
+			result := pbinit.NewDNSCheckResult()
+
+			for _, h := range dnsCfg.ExternalHostnames {
 				addrs, err := net.LookupHost(h)
-				if err != nil {
-					log.Error(err)
-					continue
-				}
-				for _, addr := range addrs {
-					log.Infof("host: %s, addr: %s", h, addr)
-				}
+				result.Lookups = append(result.Lookups, &monitoring.DNSLookup{
+					Host:      h,
+					Addresses: addrs,
+					Type:      monitoring.LookupType_EXTERNAL_LOOKUP.String(),
+					Error:     err.Error(),
+				})
+			}
+
+			for _, h := range dnsCfg.InternalHostnames {
+				addrs, err := net.LookupHost(h)
+				result.Lookups = append(result.Lookups, &monitoring.DNSLookup{
+					Host:      h,
+					Addresses: addrs,
+					Type:      monitoring.LookupType_INTERNAL_LOOKUP.String(),
+					Error:     err.Error(),
+				})
 			}
 
 			// Add logic for sending check results here.
+			if err := gotelnats.Publish(
+				context.Background(),
+				natsConn.Conn,
+				"cyverse.discoenv.monitoring.dns", //TODO: make this configurable
+				result,
+			); err != nil {
+				log.Error(err)
+			}
 
-			time.Sleep(dnsInterval)
+			time.Sleep(*dnsCfg.Interval)
 		}
-	}(dnsHosts, dnsInterval)
+	}(natsConn, dnsCfg)
 
 	portStr := fmt.Sprintf(":%d", *varsPort)
 	if err = http.ListenAndServe(portStr, nil); err != nil {
