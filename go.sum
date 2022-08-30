@@ -22,16 +22,12 @@ github.com/cyverse-de/go-mod/logging v0.0.2 h1:MhmyAXl1UgxwXUgP2C5/jl7QAsF+Bs+r7
 github.com/cyverse-de/go-mod/logging v0.0.2/go.mod h1:KkvW+/cMUdkfsJAD3uqMxHEb5naX8bwnO6z8znqHILQ=
 github.com/cyverse-de/go-mod/otelutils v0.0.3 h1:4DAxvkZhf7YRUJeHaCyodbWv7t+tLzFchw6B4GrDsZ0=
 github.com/cyverse-de/go-mod/otelutils v0.0.3/go.mod h1:h75ZnGtwiwGwHgqpxFQL0912bnHMrcOKfyGAv2+q2Vw=
-github.com/cyverse-de/go-mod/pbinit v0.0.4 h1:DB0ztvwl5HALk6+R3qqohBLnYBPxb8suNZHL25Fv+G4=
-github.com/cyverse-de/go-mod/pbinit v0.0.4/go.mod h1:aLslJlvX0wrVD/jLWq/VeKLFAiFlCY6vOBPyZodklkM=
 github.com/cyverse-de/go-mod/pbinit v0.0.5 h1:oWPDUecebTrVqdMmlwsilgHI573OMfyDDJHuZ+k3Nb8=
 github.com/cyverse-de/go-mod/pbinit v0.0.5/go.mod h1:3VIpE6vg+lT3LwlAEWMw5WCCjhkOVacSRPcIBJnMeOY=
 github.com/cyverse-de/go-mod/protobufjson v0.0.3 h1:XTIZejY7EUbpF6ZdhRhiFX9PGYDkGGmPP760cDswGWM=
 github.com/cyverse-de/go-mod/protobufjson v0.0.3/go.mod h1:p/ASemjpl2GEFYb3Tt7N8RozViwonsK0fOm0LxYeCt8=
 github.com/cyverse-de/p/go/header v0.0.1 h1:YgI0DLIOvL6m0LF22tFUk3OHLtW5NCuNiaGqwkxv64s=
 github.com/cyverse-de/p/go/header v0.0.1/go.mod h1:VHHZzBOwFQLfIrfIjK1FJlaKy00m4CFGufx4LhVXd8Q=
-github.com/cyverse-de/p/go/monitoring v0.0.1 h1:kWGoJozNfrypBDVnQ5HY2/zsGbjU7VqTJ0wzwcy03Ns=
-github.com/cyverse-de/p/go/monitoring v0.0.1/go.mod h1:UzSOg02RZ3GEm8iuQu39Hbo8rnYDfZ5XzZnN8UQYCyY=
 github.com/cyverse-de/p/go/monitoring v0.0.2 h1:oI/zt2a7k66JOKs9z+3QT7EzRYbPee+mgLD6DG+nj8w=
 github.com/cyverse-de/p/go/monitoring v0.0.2/go.mod h1:UzSOg02RZ3GEm8iuQu39Hbo8rnYDfZ5XzZnN8UQYCyY=
 github.com/cyverse-de/p/go/qms v0.0.6 h1:0EwpXN5XrEhc4RI13BRfisOtb2FuntkbKiFmyosNetk=
@@ -96,8 +92,6 @@ github.com/joho/godotenv v1.3.0/go.mod h1:7hK45KPybAkOC6peb+G5yklZfMxEjkZhHbwpqx
 github.com/klauspost/compress v1.15.6 h1:6D9PcO8QWu0JyaQ2zUMmu16T1T+zjjEpP91guRsvDfY=
 github.com/knadh/koanf v1.4.1 h1:Z0VGW/uo8NJmjd+L1Dc3S5frq6c62w5xQ9Yf4Mg3wFQ=
 github.com/knadh/koanf v1.4.1/go.mod h1:1cfH5223ZeZUOs8FU2UdTmaNfHpqgtjV0+NHjRO43gs=
-github.com/lib/pq v1.10.6 h1:jbk+ZieJ0D7EVGJYpL9QTz7/YW6UHbmdnZWYyK5cdBs=
-github.com/lib/pq v1.10.6/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
 github.com/magiconair/properties v1.8.6 h1:5ibWZ6iY0NctNGWo87LalDlEZ6R41TqbbDamhfG/Qzo=
 github.com/magiconair/properties v1.8.6/go.mod h1:y3VJvCyxH9uVvJTWEGAELF3aiYNyPKd5NZ3oSwXrF60=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=

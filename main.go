@@ -21,7 +21,6 @@ import (
 	"github.com/cyverse-de/monitoring-agent/natsconn"
 	"github.com/cyverse-de/p/go/monitoring"
 	"github.com/knadh/koanf"
-	_ "github.com/lib/pq"
 	"github.com/nats-io/nats.go"
 	"github.com/sirupsen/logrus"
 )

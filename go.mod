@@ -9,15 +9,14 @@ require (
 	github.com/cyverse-de/go-mod/otelutils v0.0.3
 	github.com/cyverse-de/go-mod/pbinit v0.0.5
 	github.com/cyverse-de/go-mod/protobufjson v0.0.3
+	github.com/cyverse-de/p/go/monitoring v0.0.2
 	github.com/knadh/koanf v1.4.1
-	github.com/lib/pq v1.10.6
 	github.com/nats-io/nats.go v1.16.0
 	github.com/sirupsen/logrus v1.9.0
 )
 
 require (
 	github.com/cyverse-de/p/go/header v0.0.1 // indirect
-	github.com/cyverse-de/p/go/monitoring v0.0.2 // indirect
 	github.com/cyverse-de/p/go/qms v0.0.6 // indirect
 	github.com/cyverse-de/p/go/svcerror v0.0.5 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
